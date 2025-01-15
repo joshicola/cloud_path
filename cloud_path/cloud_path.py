@@ -26,7 +26,7 @@ class CloudPath(Path):
         return obj
 
     def _get_fs_path(self) -> str:
-        return str(super())
+        return super().__str__()  # str(super(CloudPath, self))
 
     def ls(self):
         return self.filesystem.ls(self._get_fs_path())
@@ -69,7 +69,7 @@ class CloudPath(Path):
     def rm(self, missing_ok=False):
         self.unlink(missing_ok)
 
-    def open(self, *args, mode="r", **kwargs):
+    def open(self, mode="r", *args, **kwargs):
         return self.filesystem.open(self._get_fs_path(), mode, *args, **kwargs)
 
     def read_text(
@@ -101,10 +101,10 @@ class CloudPath(Path):
         return CloudPath(str(target), filesystem=self.filesystem)
 
     def __truediv__(self, other: str) -> "CloudPath":
-        return CloudPath(self._get_fs_path() + "/" + other, self.filesystem)
+        return CloudPath(self._get_fs_path(), other, filesystem=self.filesystem)
 
     def __str__(self) -> str:
-        return str(super())
+        return super().__str__()
 
     def __repr__(self) -> str:
         return f"CloudPath('{self._get_fs_path()}')"
