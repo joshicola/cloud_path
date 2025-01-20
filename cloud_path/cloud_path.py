@@ -6,16 +6,32 @@ from fsspec.spec import AbstractFileSystem
 
 class CloudPath(Path):
     def __new__(
-        cls, *args: Union[str, Path, "CloudPath"], filesystem: AbstractFileSystem = None
+        cls,
+        *args: Union[str, Path, "CloudPath", AbstractFileSystem],
+        filesystem: AbstractFileSystem = None,
     ):
-        # Join multiple path components
-        path = Path(*args)
+        """Constructor for the CloudPath class.
+
+        Args:
+            *args (Union[str, Path, "CloudPath", AbstractFileSystem]): Objects that can be joined to form a path.
+            filesystem (AbstractFileSystem, optional): The filesystem to use. Defaults to None.
+
+        Returns:
+            CloudPath: An initialized CloudPath object.
+        """
+        if filesystem is None and isinstance(args[-1], AbstractFileSystem):
+            path = Path(*args[:-1])
+            filesystem = args[-1]
+        else:
+            # Join multiple path components
+            path = Path(*args)
 
         # If any component is a CloudPath, inherit its filesystem
         if any(isinstance(arg, CloudPath) for arg in args):
             cloud_arg = next(arg for arg in args if isinstance(arg, CloudPath))
             filesystem = cloud_arg.filesystem
 
+        # If we do not have an explicit filesystem, return a regular Path object
         if not filesystem:
             return super().__new__(Path, str(path))
 
@@ -26,9 +42,21 @@ class CloudPath(Path):
         return obj
 
     def _get_fs_path(self) -> str:
+        """Return the path as a string.
+
+        Returns:
+            str: The path as a string.
+        """
         return super().__str__()  # str(super(CloudPath, self))
 
     def ls(self):
+        """Get the files and directories in the path.
+
+        # TODO: Extend to support more arguments consistent with other filesystems.
+
+        Returns:
+            list: list of strings representing the files and directories in the path.
+        """
         return self.filesystem.ls(self._get_fs_path())
 
     def glob(self, pattern: str, *, recursive: bool = False):
