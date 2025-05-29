@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 fsspec = "^2024.9.0"
+tornado = ">=6.5"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.28.0"
