@@ -5,6 +5,12 @@ from fsspec.spec import AbstractFileSystem
 
 
 class CloudPath(Path):
+    # def __init__(self, *args, filesystem: AbstractFileSystem = None):
+    #     if isinstance(args[-1], AbstractFileSystem):
+    #         self.filesystem = args[-1]
+    #         args = args[:-1]
+    #     super().__init__(*args)
+
     def __new__(
         cls,
         *args: Union[str, Path, "CloudPath", AbstractFileSystem],
@@ -40,6 +46,34 @@ class CloudPath(Path):
         obj.filesystem = filesystem
 
         return obj
+
+    def __init__(
+        self,
+        *args: Union[str, Path, "CloudPath", AbstractFileSystem],
+        filesystem: AbstractFileSystem = None,
+    ):
+        """Constructor for the CloudPath class.
+
+        Args:
+            *args (Union[str, Path, "CloudPath", AbstractFileSystem]): Objects that can be joined to form a path.
+            filesystem (AbstractFileSystem, optional): The filesystem to use. Defaults to None.
+        """
+        if any([isinstance(arg, AbstractFileSystem) for arg in args]):
+            self.filesystem = next(
+                arg for arg in args if isinstance(arg, AbstractFileSystem)
+            )
+        if not self.filesystem:
+            if filesystem:
+                self.filesystem = filesystem
+            elif args and isinstance(args[-1], AbstractFileSystem):
+                self.filesystem = args[-1]
+                args = args[:-1]
+        if args and isinstance(args[-1], AbstractFileSystem):
+            self.filesystem = args[-1]
+            args = args[:-1]
+
+        path = Path(*args)
+        super().__init__(path)
 
     def _get_fs_path(self) -> str:
         """Return the path as a string.
